@@ -1,0 +1,33 @@
+{
+    "name": "peerchat",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "dev:https": "vite",
+        "build": "tsc -b && vite build",
+        "lint": "oxlint",
+        "preview": "vite preview"
+    },
+    "prettier": {
+        "useTabs": false,
+        "tabWidth": 4
+    },
+    "dependencies": {
+        "@vitejs/plugin-basic-ssl": "^2.3.0",
+        "peer": "^1.0.2",
+        "peerjs": "^1.5.5",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7"
+    },
+    "devDependencies": {
+        "@types/node": "^24.13.2",
+        "@types/react": "^19.2.17",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^6.0.3",
+        "oxlint": "^1.71.0",
+        "typescript": "~6.0.2",
+        "vite": "^8.1.1"
+    }
+}
