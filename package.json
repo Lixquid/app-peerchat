@@ -15,7 +15,6 @@
         "tabWidth": 4
     },
     "dependencies": {
-        "@vitejs/plugin-basic-ssl": "^2.3.0",
         "peer": "^1.0.2",
         "peerjs": "^1.5.5",
         "react": "^19.2.7",
