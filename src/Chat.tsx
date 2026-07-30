@@ -672,11 +672,19 @@ export function Chat() {
     };
 
     const renderMessageContent = (msg: Message) => {
+        const isEncryptedNotDecrypted = msg.encrypted && (!encryptionEnabled || !encryptionPassword);
         if (msg.type === "file" && msg.fileName && msg.fileType) {
             const isImage = isImageFile(msg.fileType);
             const fileUrl = msg.content;
             return (
-                <div className="message-file">
+                <div className={"message-file" + (isEncryptedNotDecrypted ? " encrypted" : "")}>
+                    {isEncryptedNotDecrypted && (
+                        <div className="message-file-encrypted-overlay" onClick={() => setShowDecryptionPrompt(true)}>
+                            <span className="encrypted-overlay-icon">🔒</span>
+                            <span className="encrypted-overlay-text">Encrypted file</span>
+                            <span className="encrypted-overlay-action">Click to decrypt</span>
+                        </div>
+                    )}
                     {isImage ? (
                         <a
                             href={fileUrl}
@@ -712,11 +720,23 @@ export function Chat() {
                 </div>
             );
         }
-        const displayContent =
-            msg.encrypted && (!encryptionEnabled || !encryptionPassword)
-                ? "[Encrypted - enter password to decrypt]"
-                : msg.content;
-        return <p className="message-text">{linkify(displayContent)}</p>;
+        const displayContent = isEncryptedNotDecrypted
+            ? "[Encrypted - enter password to decrypt]"
+            : msg.content;
+        return (
+            <>
+                <p className="message-text">{linkify(displayContent)}</p>
+                {isEncryptedNotDecrypted && (
+                    <button
+                        className="decrypt-message-btn"
+                        onClick={() => setShowDecryptionPrompt(true)}
+                        title="Enter decryption password"
+                    >
+                        <span>🔒</span> Enter password to decrypt
+                    </button>
+                )}
+            </>
+        );
     };
 
     return (
@@ -847,24 +867,27 @@ export function Chat() {
                 )}
 
                 <div className="messages-area" role="log" aria-live="polite">
-                    {messages.map((msg) => (
-                        <div
-                            key={msg.id}
-                            className={`message ${msg.sender === "me" ? "sent" : "received"} ${msg.encrypted ? "encrypted" : ""}`}
-                        >
-                            <div className="message-bubble">
-                                {renderMessageContent(msg)}
-                                <span className="message-time">
-                                    {formatTime(msg.timestamp)}
-                                    {msg.encrypted && (
-                                        <span className="encrypted-badge">
-                                            🔒
-                                        </span>
-                                    )}
-                                </span>
+                    {messages.map((msg) => {
+                        const isEncryptedNotDecrypted = msg.encrypted && (!encryptionEnabled || !encryptionPassword);
+                        return (
+                            <div
+                                key={msg.id}
+                                className={`message ${msg.sender === "me" ? "sent" : "received"} ${msg.encrypted ? "encrypted" : ""} ${isEncryptedNotDecrypted ? "not-decrypted" : ""}`}
+                            >
+                                <div className="message-bubble">
+                                    {renderMessageContent(msg)}
+                                    <span className="message-time">
+                                        {formatTime(msg.timestamp)}
+                                        {msg.encrypted && (
+                                            <span className="encrypted-badge">
+                                                🔒
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                     <div ref={messagesEndRef} className="messages-end" />
                 </div>
 

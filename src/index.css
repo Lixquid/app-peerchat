@@ -1178,3 +1178,129 @@ body {
     font-size: 15px;
   }
 }
+
+/* ========================================
+   ENCRYPTED MESSAGE STYLING
+========================================== */
+
+/* Diagonal stripes pattern for encrypted messages that are NOT decrypted yet */
+.message.not-decrypted .message-bubble::before,
+.message-file.not-decrypted::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(255, 255, 255, 0.03) 8px,
+    rgba(255, 255, 255, 0.03) 16px
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.message.sent.not-decrypted .message-bubble::before {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(0, 0, 0, 0.1) 8px,
+    rgba(0, 0, 0, 0.1) 16px
+  );
+}
+
+/* Ensure content sits above stripes */
+.message.not-decrypted .message-bubble > *,
+.message-file.not-decrypted > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Encrypted file overlay */
+.message-file.not-decrypted {
+  position: relative;
+  overflow: hidden;
+}
+
+.encrypted-file-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(10, 10, 12, 0.9);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  z-index: 2;
+}
+
+.encrypted-file-overlay:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.encrypted-file-icon {
+  font-size: 32px;
+  opacity: 0.7;
+}
+
+.encrypted-file-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.encrypted-file-action {
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+/* Decrypt message button */
+.decrypt-message-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.decrypt-message-btn:hover {
+  background: var(--accent);
+  color: var(--text-inverse);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.decrypt-message-btn span {
+  font-size: 11px;
+}
+
+/* Encrypted badge enhancement */
+.encrypted-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+/* File message encrypted state */
+.message-file.encrypted .message-file-image {
+  opacity: 0.3;
+  filter: blur(2px);
+}
