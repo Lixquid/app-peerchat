@@ -174,6 +174,10 @@ export function Chat() {
     const [decryptionInput, setDecryptionInput] = useState<string>("");
     const [decryptionError, setDecryptionError] = useState<string | null>(null);
 
+    // Refs to track current encryption state for use in event callbacks
+    const encryptionEnabledRef = useRef(false);
+    const encryptionPasswordRef = useRef<string>("");
+
     const peerRef = useRef<Peer | null>(null);
     const connRef = useRef<DataConnection | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -338,9 +342,9 @@ export function Chat() {
                         };
                         setMessages((prev) => [...prev, newMessage]);
 
-                        // If we received an encrypted message but encryption is not enabled locally,
-                        // force the decryption prompt
-                        if (isEncrypted && !encryptionEnabled) {
+                        // If we received an encrypted message but encryption is not enabled locally
+                        // (or enabled without a password), force the decryption prompt
+                        if (isEncrypted && (!encryptionEnabledRef.current || !encryptionPasswordRef.current)) {
                             setShowDecryptionPrompt(true);
                             setDecryptionError(null);
                         }
@@ -606,6 +610,8 @@ export function Chat() {
         }
         setEncryptionPassword(encryptionInput);
         setEncryptionEnabled(true);
+        encryptionEnabledRef.current = true;
+        encryptionPasswordRef.current = encryptionInput;
         setEncryptionInput("");
         setShowEncryptionModal(false);
     };
@@ -613,6 +619,8 @@ export function Chat() {
     const handleEncryptionDisable = () => {
         setEncryptionEnabled(false);
         setEncryptionPassword("");
+        encryptionEnabledRef.current = false;
+        encryptionPasswordRef.current = "";
     };
 
     const handleDecryptionSubmit = async () => {
@@ -634,6 +642,8 @@ export function Chat() {
         // Password is correct - enable encryption and decrypt all messages
         setEncryptionPassword(decryptionInput);
         setEncryptionEnabled(true);
+        encryptionEnabledRef.current = true;
+        encryptionPasswordRef.current = decryptionInput;
         setShowDecryptionPrompt(false);
         setDecryptionInput("");
         setDecryptionError(null);
