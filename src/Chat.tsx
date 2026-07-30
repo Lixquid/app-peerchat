@@ -307,6 +307,13 @@ export function Chat() {
             setConnectionStatus("connected");
             setConnectedPeerId(conn.peer);
             setError(null);
+            // Reset encryption state for new connection
+            setEncryptionEnabled(false);
+            setEncryptionPassword("");
+            setShowDecryptionPrompt(false);
+            setDecryptionInput("");
+            setDecryptionError(null);
+            decryptCache.current.clear();
             setMessages([]);
         });
         conn.on("data", async (data: unknown) => {
@@ -363,6 +370,14 @@ export function Chat() {
             setConnectionStatus("disconnected");
             setConnectedPeerId(null);
             connRef.current = null;
+            // Reset encryption state on disconnect
+            setEncryptionEnabled(false);
+            setEncryptionPassword("");
+            setShowDecryptionPrompt(false);
+            setDecryptionInput("");
+            setDecryptionError(null);
+            decryptCache.current.clear();
+            setMessages([]);
         });
         conn.on("error", (err: Error) => {
             setError(err.message);
@@ -375,6 +390,14 @@ export function Chat() {
             return;
         setConnectionStatus("connecting");
         setError(null);
+        // Reset encryption state when connecting to a new peer
+        setEncryptionEnabled(false);
+        setEncryptionPassword("");
+        setShowDecryptionPrompt(false);
+        setDecryptionInput("");
+        setDecryptionError(null);
+        decryptCache.current.clear();
+        setMessages([]);
         const conn = peerRef.current.connect(peerIdToConnect.trim(), {
             reliable: true,
         });
