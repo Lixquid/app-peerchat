@@ -585,13 +585,11 @@ export function Chat() {
         setEncryptionEnabled(true);
         setEncryptionInput("");
         setShowEncryptionModal(false);
-        setMessages([]);
     };
 
     const handleEncryptionDisable = () => {
         setEncryptionEnabled(false);
         setEncryptionPassword("");
-        setMessages([]);
     };
 
     const handleDecryptionSubmit = async () => {
