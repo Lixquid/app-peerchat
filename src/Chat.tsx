@@ -170,6 +170,9 @@ export function Chat() {
     const [showEncryptionModal, setShowEncryptionModal] = useState(false);
     const [encryptionInput, setEncryptionInput] = useState<string>("");
     const [showAboutModal, setShowAboutModal] = useState(false);
+    const [showDecryptionPrompt, setShowDecryptionPrompt] = useState(false);
+    const [decryptionInput, setDecryptionInput] = useState<string>("");
+    const [decryptionError, setDecryptionError] = useState<string | null>(null);
 
     const peerRef = useRef<Peer | null>(null);
     const connRef = useRef<DataConnection | null>(null);
@@ -311,23 +314,29 @@ export function Chat() {
                 try {
                     const parsed = JSON.parse(data);
                     if (parsed && parsed.type && parsed.content) {
+                        const isEncrypted = parsed.encrypted === true;
                         const newMessage: Message = {
                             id: crypto.randomUUID(),
                             type: parsed.type,
-                            content: parsed.encrypted
+                            content: isEncrypted
                                 ? "[Encrypted - enter password to decrypt]"
                                 : parsed.content,
-                            encryptedContent: parsed.encrypted
-                                ? parsed.content
-                                : undefined,
+                            encryptedContent: isEncrypted ? parsed.content : undefined,
                             fileName: parsed.fileName,
                             fileSize: parsed.fileSize,
                             fileType: parsed.fileType,
                             sender: "peer",
                             timestamp: new Date(),
-                            encrypted: parsed.encrypted,
+                            encrypted: isEncrypted,
                         };
                         setMessages((prev) => [...prev, newMessage]);
+
+                        // If we received an encrypted message but encryption is not enabled locally,
+                        // force the decryption prompt
+                        if (isEncrypted && !encryptionEnabled) {
+                            setShowDecryptionPrompt(true);
+                            setDecryptionError(null);
+                        }
                     } else {
                         const newMessage: Message = {
                             id: crypto.randomUUID(),
@@ -585,9 +594,59 @@ export function Chat() {
         setMessages([]);
     };
 
+    const handleDecryptionSubmit = async () => {
+        if (!decryptionInput.trim()) return;
+        
+        // Find an encrypted message to test the password
+        const encryptedMsg = messages.find((m) => m.encrypted && m.encryptedContent);
+        if (!encryptedMsg) {
+            setDecryptionError("No encrypted message to verify");
+            return;
+        }
+
+        const decrypted = await decryptData(encryptedMsg.encryptedContent!, decryptionInput);
+        if (decrypted === null) {
+            setDecryptionError("Incorrect password. Try again or disconnect.");
+            return;
+        }
+
+        // Password is correct - enable encryption and decrypt all messages
+        setEncryptionPassword(decryptionInput);
+        setEncryptionEnabled(true);
+        setShowDecryptionPrompt(false);
+        setDecryptionInput("");
+        setDecryptionError(null);
+        decryptCache.current.clear();
+
+        // Re-decrypt all messages with the correct password
+        setMessages((current) =>
+            current.map((m) => {
+                if (!m.encrypted || !m.encryptedContent) return m;
+                return {
+                    ...m,
+                    content: decrypted, // This will be updated properly by the useEffect
+                };
+            }),
+        );
+        // The useEffect will handle actual decryption
+    };
+
+    const handleDecryptionDisconnect = () => {
+        connRef.current?.close();
+        setShowDecryptionPrompt(false);
+        setDecryptionInput("");
+        setDecryptionError(null);
+    };
+
     const handleEncryptionModalKey = (e: React.KeyboardEvent) => {
         if (e.key === "Enter") {
             handleEncryptionEnable();
+        }
+    };
+
+    const handleDecryptionKey = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            handleDecryptionSubmit();
         }
     };
 
@@ -1115,6 +1174,71 @@ export function Chat() {
                                 }}
                             >
                                 Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showDecryptionPrompt && (
+                <div className="modal-overlay decryption-modal-overlay">
+                    <div className="modal-card decryption-modal-card">
+                        <div className="decryption-icon">🔒</div>
+                        <h2 className="connect-title">Encrypted Message Received</h2>
+                        <p
+                            style={{
+                                marginBottom: "16px",
+                                color: "var(--text-secondary)",
+                                fontSize: "13px",
+                                lineHeight: 1.5,
+                            }}
+                        >
+                            Your peer has sent an encrypted message, but you haven’t
+                            entered the decryption password yet. You must enter the
+                            correct password to decrypt messages, or disconnect the
+                            session.
+                        </p>
+                        {decryptionError && (
+                            <p
+                                className="decryption-error"
+                                style={{
+                                    color: "var(--error)",
+                                    marginBottom: "16px",
+                                    fontSize: "13px",
+                                    textAlign: "center",
+                                }}
+                            >
+                                {decryptionError}
+                            </p>
+                        )}
+                        <div className="connect-form">
+                            <input
+                                type="password"
+                                value={decryptionInput}
+                                onChange={(e) => setDecryptionInput(e.target.value)}
+                                onKeyDown={handleDecryptionKey}
+                                placeholder="Enter decryption password"
+                                className="peer-input"
+                                autoFocus
+                                maxLength={64}
+                            />
+                            <button
+                                onClick={handleDecryptionSubmit}
+                                className="connect-btn"
+                                disabled={!decryptionInput.trim()}
+                            >
+                                Decrypt
+                            </button>
+                            <button
+                                onClick={handleDecryptionDisconnect}
+                                className="connect-btn"
+                                style={{
+                                    background: "var(--error-bg)",
+                                    color: "var(--error)",
+                                    border: "1px solid var(--error-border)",
+                                }}
+                            >
+                                Disconnect
                             </button>
                         </div>
                     </div>

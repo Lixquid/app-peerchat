@@ -1115,3 +1115,66 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ========================================
+   DECRYPTION MODAL (Forced - Cannot Dismiss)
+========================================== */
+.decryption-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 2000; /* Higher than other modals */
+  animation: fadeIn 0.2s ease;
+  /* Prevent closing on overlay click */
+  pointer-events: auto;
+}
+
+.decryption-modal-overlay > .modal-card {
+  pointer-events: auto;
+  max-width: 420px;
+  width: 100%;
+  padding: 32px;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--accent-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl), 0 0 40px var(--accent-glow);
+  text-align: center;
+  animation: slideUp 0.3s ease;
+  /* No stopPropagation needed - overlay doesn't close on click */
+}
+
+.decryption-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: pulse 2s infinite;
+}
+
+.decryption-error {
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+/* Responsive for decryption modal */
+@media (max-width: 480px) {
+  .decryption-modal-overlay > .modal-card {
+    margin: 0 16px;
+    padding: 24px 20px;
+  }
+
+  .decryption-icon {
+    font-size: 40px;
+  }
+
+  .connect-title {
+    font-size: 15px;
+  }
+}
