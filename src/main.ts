@@ -10,6 +10,7 @@ import {
     randomBytes,
     toBase64,
 } from "./crypto";
+import qrcode from "qrcode-generator";
 
 const ID_PREFIX = "com_lixquid_peerchat-";
 const ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -29,7 +30,8 @@ const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) 
 
 const elements = {
     myId: $<HTMLElement>("my-id"),
-    dialogMyId: $<HTMLElement>("dialog-my-id"),
+    connectMyId: $<HTMLElement>("connect-my-id"),
+    qrCanvas: $<HTMLCanvasElement>("qr-canvas"),
     copyId: $<HTMLButtonElement>("copy-id"),
     connectButton: $<HTMLButtonElement>("connect-button"),
     encBadge: $<HTMLElement>("enc-badge"),
@@ -49,6 +51,7 @@ const elements = {
     connectDialog: $<HTMLDialogElement>("connect-dialog"),
     connectForm: $<HTMLFormElement>("connect-form"),
     peerIdInput: $<HTMLInputElement>("peer-id-input"),
+    connectSubmit: $<HTMLButtonElement>("connect-submit"),
     connectError: $<HTMLElement>("connect-error"),
     connectCancelButton: $<HTMLButtonElement>("connect-cancel"),
     passwordDialog: $<HTMLDialogElement>("password-dialog"),
@@ -74,6 +77,7 @@ let pendingOffer: { iv: string; data: string; salt: string } | null = null; // i
 let pendingFiles: File[] = [];
 let connectedPeerId: string | null = null;
 let autoConnectTarget: string | null = null;
+let connectDialogDismissable = false; // false until the first connection is established
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -104,6 +108,48 @@ function formatSize(bytes: number): string {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+// ---------------------------------------------------------------------------
+// QR code / welcome dialog
+// ---------------------------------------------------------------------------
+
+function buildConnectUrl(id: string): string {
+    return `${window.location.origin}${window.location.pathname}#connectTo=${id}`;
+}
+
+function updateQrCode(id: string): void {
+    const qr = qrcode(0, "M");
+    qr.addData(buildConnectUrl(id));
+    qr.make();
+
+    const canvas = elements.qrCanvas;
+    const size = canvas.width;
+    const count = qr.getModuleCount();
+    const cell = Math.floor(size / (count + 4));
+    const offset = Math.floor((size - cell * count) / 2);
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "#000";
+    for (let row = 0; row < count; row++) {
+        for (let col = 0; col < count; col++) {
+            if (qr.isDark(row, col)) {
+                ctx.fillRect(offset + col * cell, offset + row * cell, cell, cell);
+            }
+        }
+    }
+}
+
+function openConnectDialog(): void {
+    showConnectError("");
+    elements.peerIdInput.value = "";
+    elements.connectSubmit.disabled = true;
+    elements.connectCancelButton.classList.toggle("hidden", !connectDialogDismissable);
+    elements.connectDialog.showModal();
+    elements.peerIdInput.focus();
 }
 
 // ---------------------------------------------------------------------------
@@ -201,6 +247,10 @@ function setupConnection(c: DataConnection): void {
         connectedPeerId = c.peer;
         addSystem(`Connected to ${c.peer}`);
         updateComposer();
+        connectDialogDismissable = true;
+        if (elements.connectDialog.open) {
+            elements.connectDialog.close();
+        }
     });
     c.on("data", (data) => handleData(data));
     c.on("close", () => {
@@ -220,13 +270,18 @@ function startPeer(): void {
     const id = generateId();
     peer = new Peer(ID_PREFIX + id);
     elements.myId.textContent = "····";
-    elements.dialogMyId.textContent = "····";
+    elements.connectMyId.textContent = "····";
 
     peer.on("open", () => {
         elements.myId.textContent = id;
-        elements.dialogMyId.textContent = id;
+        elements.connectMyId.textContent = id;
+        updateQrCode(id);
         addSystem(`Your ID is ${id}. Share it with a peer, or enter theirs to connect.`);
         updateComposer();
+
+        // Show the connect dialog as part of the load workflow. It stays
+        // undismissable until a connection has been established.
+        openConnectDialog();
 
         if (autoConnectTarget && !conn) {
             connectToPeer(autoConnectTarget);
@@ -556,22 +611,26 @@ elements.unlockForm.addEventListener("submit", (event) => {
     void answerEncryptionHandshake();
 });
 
-elements.connectButton.addEventListener("click", () => {
-    showConnectError("");
-    elements.peerIdInput.value = "";
-    elements.connectDialog.showModal();
-    elements.peerIdInput.focus();
-});
+elements.connectButton.addEventListener("click", () => openConnectDialog());
 elements.connectCancelButton.addEventListener("click", () => elements.connectDialog.close());
+elements.connectDialog.addEventListener("cancel", (event) => {
+    // Keep the dialog undismissable (e.g. Escape key) until the first
+    // connection has been established.
+    if (!connectDialogDismissable) {
+        event.preventDefault();
+    }
+});
 elements.peerIdInput.addEventListener("input", () => {
     elements.peerIdInput.value = elements.peerIdInput.value.toUpperCase().replace(/[^A-Z]/g, "");
+    elements.connectSubmit.disabled = elements.peerIdInput.value.length !== 4;
 });
 elements.connectForm.addEventListener("submit", (event) => {
     event.preventDefault();
     if (!peer) return;
     showConnectError("");
     connectToPeer(elements.peerIdInput.value);
-    elements.connectDialog.close();
+    // The dialog stays open (and undismissable until connected) and is closed
+    // automatically once the connection opens.
 });
 
 elements.copyId.addEventListener("click", () => {

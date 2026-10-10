@@ -49,22 +49,30 @@
     </div>
 
     <dialog id="connect-dialog">
-      <form method="dialog" id="connect-form">
+      <div class="connect-intro">
         <h2>Connect to a peer</h2>
-        <p class="muted">Your ID is <code id="dialog-my-id">····</code>. Share it with your peer, or enter theirs below.</p>
-        <input
-          id="peer-id-input"
-          type="text"
-          maxlength="4"
-          placeholder="PEER ID"
-          autocomplete="off"
-          spellcheck="false"
-          required
-        />
+        <p class="muted">Your ID:</p>
+        <div id="connect-my-id" class="big-id">····</div>
+        <div id="qr-box"><canvas id="qr-canvas" width="220" height="220"></canvas></div>
+        <p class="muted">Have your peer scan this code, or share your ID with them.</p>
+      </div>
+      <hr />
+      <form id="connect-form">
+        <div class="input-row">
+          <input
+            id="peer-id-input"
+            type="text"
+            maxlength="4"
+            placeholder="PEER ID"
+            autocomplete="off"
+            spellcheck="false"
+            required
+          />
+          <button type="submit" class="primary" id="connect-submit" disabled>Connect</button>
+        </div>
         <p id="connect-error" class="error hidden"></p>
         <div class="dialog-buttons">
-          <button type="button" id="connect-cancel">Cancel</button>
-          <button type="submit" class="primary" id="connect-submit">Connect</button>
+          <button type="button" id="connect-cancel" class="hidden">Cancel</button>
         </div>
       </form>
     </dialog>

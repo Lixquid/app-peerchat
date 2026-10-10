@@ -9,7 +9,8 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "peerjs": "^1.5.5"
+        "peerjs": "^1.5.5",
+        "qrcode-generator": "^2.0.4"
     },
     "devDependencies": {
         "@vitejs/plugin-basic-ssl": "^2.3.0",

@@ -279,7 +279,7 @@ dialog {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1.5rem;
-    width: min(24rem, 90vw);
+    width: min(26rem, 92vw);
 }
 
 dialog::backdrop {
@@ -312,6 +312,67 @@ dialog input:focus {
     letter-spacing: 0.2em;
     font-size: 1.2rem;
     text-align: center;
+}
+
+#connect-form .input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+#connect-form .input-row input {
+    flex: 1;
+    width: auto;
+    margin: 0;
+    min-width: 0;
+}
+
+#connect-form .input-row button {
+    flex-shrink: 0;
+    margin: 0;
+}
+
+/* Connect dialog --------------------------------------------------------- */
+
+.connect-intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.connect-intro .muted {
+    margin: 0;
+}
+
+.big-id {
+    font-size: 3rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    line-height: 1.2;
+    margin: 0.25rem 0 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+#qr-box {
+    background: #fff;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+#qr-canvas {
+    display: block;
+    width: 220px;
+    height: 220px;
+    image-rendering: pixelated;
+}
+
+#connect-dialog hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
 }
 
 .dialog-buttons {
