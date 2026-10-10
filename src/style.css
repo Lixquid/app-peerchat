@@ -271,6 +271,51 @@ button.primary:hover:not(:disabled) {
     display: none !important;
 }
 
+/* Toast ----------------------------------------------------------------- */
+
+#toast {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    background: #2e7d32;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    pointer-events: none;
+    animation: toast-in 0.2s ease-out;
+}
+
+#toast.toast-out {
+    animation: toast-out 0.2s ease-in forwards;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-0.5rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes toast-out {
+    from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-0.5rem);
+    }
+}
+
 /* Dialogs --------------------------------------------------------------- */
 
 dialog {

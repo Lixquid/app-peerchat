@@ -33,6 +33,7 @@ const elements = {
     connectMyId: $<HTMLElement>("connect-my-id"),
     qrCanvas: $<HTMLCanvasElement>("qr-canvas"),
     copyId: $<HTMLButtonElement>("copy-id"),
+    toast: $<HTMLElement>("toast"),
     connectButton: $<HTMLButtonElement>("connect-button"),
     encBadge: $<HTMLElement>("enc-badge"),
     messages: $<HTMLElement>("messages"),
@@ -633,8 +634,26 @@ elements.connectForm.addEventListener("submit", (event) => {
     // automatically once the connection opens.
 });
 
+let toastTimer: number | undefined;
+const showToast = (message: string) => {
+    elements.toast.textContent = message;
+    elements.toast.classList.remove("hidden", "toast-out");
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => {
+        elements.toast.classList.add("toast-out");
+    }, 3000);
+};
+
+elements.toast.addEventListener("animationend", () => {
+    if (elements.toast.classList.contains("toast-out")) {
+        elements.toast.classList.add("hidden");
+        elements.toast.classList.remove("toast-out");
+    }
+});
+
 elements.copyId.addEventListener("click", () => {
     void navigator.clipboard.writeText(elements.myId.textContent ?? "");
+    showToast("Copied!");
 });
 
 // ---------------------------------------------------------------------------
