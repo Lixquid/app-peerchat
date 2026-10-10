@@ -124,6 +124,20 @@ h1 {
     white-space: pre-wrap;
 }
 
+.message .content a {
+    color: inherit;
+    text-decoration: underline;
+    word-break: break-all;
+}
+
+.message.you .content a {
+    color: inherit;
+}
+
+.message .content a:hover {
+    opacity: 0.8;
+}
+
 .message .content.files {
     display: flex;
     flex-direction: column;

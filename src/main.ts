@@ -161,10 +161,47 @@ function openConnectDialog(): void {
 // Message rendering
 // ---------------------------------------------------------------------------
 
+// Regex matching http(s) URLs and bare www. domains, excluding trailing punctuation.
+const URL_PATTERN =
+    /(?:https?:\/\/|www\.)[^\s<>"']+/gi;
+const TRAILING_PUNCTUATION = /[.,;:!?)\]}'"]+$/;
+
+/** Split message text into text and link nodes, auto-linking detected URLs. */
+function linkify(text: string): Node[] {
+    const nodes: Node[] = [];
+    let lastIndex = 0;
+    for (const match of text.matchAll(URL_PATTERN)) {
+        let url = match[0];
+        // Trim trailing punctuation so sentences don't break the link.
+        const trailing = url.match(TRAILING_PUNCTUATION)?.[0] ?? "";
+        if (trailing) url = url.slice(0, -trailing.length);
+        const start = match.index + (match[0].length - url.length - trailing.length);
+
+        if (start > lastIndex) {
+            nodes.push(document.createTextNode(text.slice(lastIndex, start)));
+        }
+        const anchor = document.createElement("a");
+        anchor.href = url.startsWith("www.") ? `https://${url}` : url;
+        anchor.textContent = url;
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+        nodes.push(anchor);
+        lastIndex = start + url.length;
+    }
+    if (lastIndex < text.length) {
+        nodes.push(document.createTextNode(text.slice(lastIndex)));
+    }
+    return nodes;
+}
+
+function appendLinkified(parent: Node, text: string): void {
+    for (const node of linkify(text)) parent.appendChild(node);
+}
+
 function addSystem(text: string): void {
     const div = document.createElement("div");
     div.className = "message system";
-    div.textContent = text;
+    appendLinkified(div, text);
     elements.messages.appendChild(div);
     scrollToBottom();
 }
@@ -174,7 +211,7 @@ function addMessage(sender: string, text: string, encrypted = false): void {
     div.className = sender === "You" ? "message you" : "message";
     const textSpan = document.createElement("span");
     textSpan.className = "content";
-    textSpan.textContent = text;
+    appendLinkified(textSpan, text);
     div.appendChild(textSpan);
     elements.messages.appendChild(div);
     scrollToBottom();
