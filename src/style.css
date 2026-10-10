@@ -106,8 +106,9 @@ h1 {
     color: #ffffff;
 }
 
-.message.you .content.files a {
+.message.you .content.files .save-button {
     color: #e3ecff;
+    border-color: rgba(255, 255, 255, 0.35);
 }
 
 .message.you .file-entries li {
@@ -118,6 +119,12 @@ h1 {
 .message.you .file-size,
 .message.you .muted {
     color: #d5e2ff;
+}
+
+.message .lock {
+    flex-shrink: 0;
+    font-size: 0.85em;
+    user-select: none;
 }
 
 .message .content {
@@ -183,9 +190,11 @@ h1 {
     word-break: break-all;
 }
 
-.file-entries li a {
+.file-entries li .save-button {
     margin-left: auto;
     white-space: nowrap;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.85rem;
 }
 
 .zip-button {
@@ -268,6 +277,35 @@ h1 {
 #text-input:focus {
     outline: none;
     border-color: var(--accent);
+}
+
+/* Progress bars: in the composer while sending, inside messages while
+   receiving a chunked transfer. */
+.progress-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.progress-track.grow {
+    flex: 1;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width 0.15s ease-out;
+}
+
+#send-progress .progress-track {
+    flex: 1;
+}
+
+#send-progress-label {
+    white-space: nowrap;
 }
 
 #file-list {
