@@ -104,6 +104,10 @@ function clearConnectHash(): void {
     window.history.replaceState(null, "", url);
 }
 
+function shortPeerId(fullId: string): string {
+    return fullId.startsWith(ID_PREFIX) ? fullId.slice(ID_PREFIX.length) : fullId;
+}
+
 function formatSize(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -220,13 +224,28 @@ function setEncrypted(active: boolean): void {
     elements.lockButton.title = active ? "Extra P2P encryption is active" : "Enable extra P2P encryption";
 }
 
+function updateConnectButton(): void {
+    const button = elements.connectButton;
+    button.classList.remove("state-disconnected", "state-connected", "state-encrypted");
+    if (connectedPeerId && encKey) {
+        button.textContent = `Encrypted to ${shortPeerId(connectedPeerId)}`;
+        button.classList.add("state-encrypted");
+    } else if (connectedPeerId) {
+        button.textContent = `Connected to ${shortPeerId(connectedPeerId)}`;
+        button.classList.add("state-connected");
+    } else {
+        button.textContent = "Connect to...";
+        button.classList.add("state-disconnected");
+    }
+}
+
 function updateComposer(): void {
     const connected = conn !== null && conn.open;
     elements.textInput.disabled = !connected;
     elements.sendButton.disabled = !connected;
     elements.fileSendButton.disabled = !connected;
     elements.lockButton.disabled = !connected || encKey !== null;
-    elements.connectButton.textContent = connectedPeerId ? `Connected to ${connectedPeerId}` : "Connect to peer…";
+    updateConnectButton();
 }
 
 function resetEncryptionState(): void {

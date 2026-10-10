@@ -254,6 +254,38 @@ button.primary:hover:not(:disabled) {
     background: var(--accent-hover);
 }
 
+/* Connect button states: grey = disconnected, green = connected,
+   blue = extra P2P encryption active. */
+#connect-button.state-disconnected {
+    background: #4a4f60;
+    border-color: #4a4f60;
+    color: var(--text);
+}
+
+#connect-button.state-disconnected:hover:not(:disabled) {
+    background: #5a6074;
+}
+
+#connect-button.state-connected {
+    background: #2e9e5b;
+    border-color: #2e9e5b;
+    color: #fff;
+}
+
+#connect-button.state-connected:hover:not(:disabled) {
+    background: #37b169;
+}
+
+#connect-button.state-encrypted {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+#connect-button.state-encrypted:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+
 .icon-button {
     padding: 0.45rem 0.55rem;
     font-size: 1rem;
