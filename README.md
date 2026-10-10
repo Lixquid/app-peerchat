@@ -24,7 +24,7 @@ create a chat connection.
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Start the development server: `npm run start`
-4. Open http://localhost:5173 in your browser
+4. Open http://localhost:8080 in your browser
 
 Changes to the source files will be automatically reloaded in the browser.
 
