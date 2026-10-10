@@ -98,10 +98,26 @@ h1 {
     align-items: baseline;
 }
 
-.message .sender {
-    font-size: 0.75rem;
-    color: var(--accent);
-    flex-shrink: 0;
+/* Messages from the current user: right-aligned with a blue background. */
+.message.you {
+    align-self: flex-end;
+    background: #2f6bff;
+    border-color: #2f6bff;
+    color: #ffffff;
+}
+
+.message.you .content.files a {
+    color: #e3ecff;
+}
+
+.message.you .file-entries li {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.message.you .file-size,
+.message.you .muted {
+    color: #d5e2ff;
 }
 
 .message .content {

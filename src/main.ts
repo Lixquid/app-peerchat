@@ -171,14 +171,11 @@ function addSystem(text: string): void {
 
 function addMessage(sender: string, text: string, encrypted = false): void {
     const div = document.createElement("div");
-    div.className = "message";
-    const senderSpan = document.createElement("span");
-    senderSpan.className = "sender";
-    senderSpan.textContent = encrypted ? `🔒 ${sender}` : sender;
+    div.className = sender === "You" ? "message you" : "message";
     const textSpan = document.createElement("span");
     textSpan.className = "content";
     textSpan.textContent = text;
-    div.append(senderSpan, textSpan);
+    div.appendChild(textSpan);
     elements.messages.appendChild(div);
     scrollToBottom();
 }
@@ -189,10 +186,7 @@ function addFilesMessage(
     encrypted = false,
 ): void {
     const div = document.createElement("div");
-    div.className = "message";
-    const senderSpan = document.createElement("span");
-    senderSpan.className = "sender";
-    senderSpan.textContent = encrypted ? `🔒 ${sender}` : sender;
+    div.className = sender === "You" ? "message you" : "message";
 
     const content = document.createElement("span");
     content.className = "content files";
@@ -242,7 +236,7 @@ function addFilesMessage(
     });
 
     content.append(header, list, zipButton);
-    div.append(senderSpan, content);
+    div.appendChild(content);
     elements.messages.appendChild(div);
     scrollToBottom();
 }
