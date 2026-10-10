@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Peerchat</title>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Peerchat</h1>
+        <div id="enc-badge" class="badge hidden" title="Extra P2P encryption is active">🔒 Encrypted</div>
+        <div id="my-id-box">
+          <span class="label">Your ID:</span>
+          <code id="my-id">····</code>
+          <button id="copy-id" title="Copy ID" class="icon-button">⧉</button>
+        </div>
+        <button id="connect-button" class="primary">Connect to peer…</button>
+      </header>
+
+      <main id="chat">
+        <div id="messages"></div>
+        <div id="drop-overlay" class="hidden">
+          <div class="drop-box">
+            <p>Drop files to send</p>
+          </div>
+        </div>
+      </main>
+
+      <footer id="composer">
+        <div id="text-composer" class="composer-row">
+          <button id="file-button" class="icon-button" title="Attach files">📎</button>
+          <button id="lock-button" class="icon-button" title="Enable extra P2P encryption">🔓</button>
+          <input id="text-input" type="text" placeholder="Type a message…" autocomplete="off" disabled />
+          <button id="send-button" class="primary" disabled>Send</button>
+        </div>
+        <div id="file-composer" class="hidden">
+          <div class="composer-row">
+            <button id="file-more-button" class="icon-button" title="Add more files">📎</button>
+            <ul id="file-list"></ul>
+          </div>
+          <div class="composer-row right">
+            <button id="file-cancel">Cancel</button>
+            <button id="file-send" class="primary">Send files</button>
+          </div>
+        </div>
+        <input id="file-input" type="file" multiple class="hidden" />
+      </footer>
+    </div>
+
+    <dialog id="connect-dialog">
+      <form method="dialog" id="connect-form">
+        <h2>Connect to a peer</h2>
+        <p class="muted">Your ID is <code id="dialog-my-id">····</code>. Share it with your peer, or enter theirs below.</p>
+        <input
+          id="peer-id-input"
+          type="text"
+          maxlength="4"
+          placeholder="PEER ID"
+          autocomplete="off"
+          spellcheck="false"
+          required
+        />
+        <p id="connect-error" class="error hidden"></p>
+        <div class="dialog-buttons">
+          <button type="button" id="connect-cancel">Cancel</button>
+          <button type="submit" class="primary" id="connect-submit">Connect</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="password-dialog">
+      <form method="dialog" id="password-form">
+        <h2>Enable extra P2P encryption</h2>
+        <p class="muted">
+          Enter a shared password. Your peer will be asked to enter the same password before encrypted
+          messaging can begin.
+        </p>
+        <input id="password-input" type="password" placeholder="Password" autocomplete="off" required />
+        <div class="dialog-buttons">
+          <button type="button" id="password-cancel">Cancel</button>
+          <button type="submit" class="primary">Send encryption request</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="unlock-dialog">
+      <form method="dialog" id="unlock-form">
+        <h2>Encryption requested</h2>
+        <p class="muted">Your peer wants to enable extra P2P encryption. Enter the matching password.</p>
+        <input id="unlock-input" type="password" placeholder="Password" autocomplete="off" required />
+        <p id="unlock-error" class="error hidden">Wrong password — decryption failed. Try again.</p>
+        <div class="dialog-buttons">
+          <button type="button" id="unlock-cancel">Ignore</button>
+          <button type="submit" class="primary">Unlock</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
