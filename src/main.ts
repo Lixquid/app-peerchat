@@ -35,7 +35,6 @@ const elements = {
     copyId: $<HTMLButtonElement>("copy-id"),
     toast: $<HTMLElement>("toast"),
     connectButton: $<HTMLButtonElement>("connect-button"),
-    encBadge: $<HTMLElement>("enc-badge"),
     messages: $<HTMLElement>("messages"),
     dropOverlay: $<HTMLElement>("drop-overlay"),
     textComposer: $<HTMLElement>("text-composer"),
@@ -219,7 +218,6 @@ function scrollToBottom(): void {
 
 function setEncrypted(active: boolean): void {
     encKey = active ? encKey : null;
-    elements.encBadge.classList.toggle("hidden", !active);
     elements.lockButton.disabled = active;
     elements.lockButton.title = active ? "Extra P2P encryption is active" : "Enable extra P2P encryption";
 }

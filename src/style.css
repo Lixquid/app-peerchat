@@ -68,15 +68,6 @@ h1 {
     color: var(--accent);
 }
 
-.badge {
-    background: rgba(91, 140, 255, 0.15);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 0.25rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.8rem;
-}
-
 /* Chat ------------------------------------------------------------------ */
 
 #chat {
