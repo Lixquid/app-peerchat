@@ -108,15 +108,60 @@ h1 {
     white-space: pre-wrap;
 }
 
-.message .content.file {
+.message .content.files {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 16rem;
+}
+
+.message .content.files a {
+    color: var(--accent);
+}
+
+.files-header {
+    display: flex;
+    gap: 0.35rem;
+    align-items: baseline;
+}
+
+.files-count {
+    font-weight: 600;
+}
+
+.file-entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.file-entries li {
     display: flex;
     gap: 0.35rem;
     align-items: baseline;
     flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
 }
 
-.message .content.file a {
-    color: var(--accent);
+.file-entries li .file-name {
+    word-break: break-all;
+}
+
+.file-entries li a {
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.zip-button {
+    align-self: flex-start;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.85rem;
 }
 
 .file-name {

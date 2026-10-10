@@ -11,17 +11,18 @@ import {
     toBase64,
 } from "./crypto";
 import qrcode from "qrcode-generator";
+import { createZip } from "./zip";
 
 const ID_PREFIX = "com_lixquid_peerchat-";
 const ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 type InnerPayload =
     | { kind: "text"; text: string }
-    | { kind: "file"; name: string; mime: string; data: string };
+    | { kind: "files"; files: { name: string; mime: string; data: string }[] };
 
 type WireMessage =
     | { type: "text"; text: string }
-    | { type: "file"; name: string; mime: string; data: ArrayBuffer }
+    | { type: "files"; files: { name: string; mime: string; data: ArrayBuffer }[] }
     | { type: "crypto-offer"; salt: string; iv: string; data: string }
     | { type: "crypto-accept"; iv: string; data: string }
     | { type: "enc-message"; iv: string; data: string };
@@ -182,27 +183,65 @@ function addMessage(sender: string, text: string, encrypted = false): void {
     scrollToBottom();
 }
 
-function addFileMessage(sender: string, name: string, mime: string, blob: Blob, encrypted = false): void {
+function addFilesMessage(
+    sender: string,
+    files: { name: string; mime: string; data: Uint8Array<ArrayBuffer> }[],
+    encrypted = false,
+): void {
     const div = document.createElement("div");
     div.className = "message";
     const senderSpan = document.createElement("span");
     senderSpan.className = "sender";
     senderSpan.textContent = encrypted ? `🔒 ${sender}` : sender;
+
     const content = document.createElement("span");
-    content.className = "content file";
+    content.className = "content files";
+
+    const totalSize = files.reduce((sum, f) => sum + f.data.byteLength, 0);
+    const header = document.createElement("div");
+    header.className = "files-header";
     const icon = document.createElement("span");
-    icon.textContent = encrypted ? "🔒📄 " : "📄 ";
+    icon.textContent = encrypted ? "🔒📁 " : "📁 ";
     const label = document.createElement("span");
-    label.className = "file-name";
-    label.textContent = name;
+    label.className = "files-count";
+    label.textContent = `${files.length} file${files.length === 1 ? "" : "s"}`;
     const size = document.createElement("span");
     size.className = "file-size muted";
-    size.textContent = ` (${formatSize(blob.size)})`;
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = name;
-    link.textContent = "Save";
-    content.append(icon, label, size, link);
+    size.textContent = ` (${formatSize(totalSize)})`;
+    header.append(icon, label, size);
+
+    const list = document.createElement("ul");
+    list.className = "file-entries";
+    for (const file of files) {
+        const li = document.createElement("li");
+        const name = document.createElement("span");
+        name.className = "file-name";
+        name.textContent = file.name;
+        const fileSize = document.createElement("span");
+        fileSize.className = "file-size muted";
+        fileSize.textContent = ` (${formatSize(file.data.byteLength)})`;
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([file.data], { type: file.mime }));
+        link.download = file.name;
+        link.textContent = "Save";
+        li.append(name, fileSize, link);
+        list.appendChild(li);
+    }
+
+    const zipButton = document.createElement("button");
+    zipButton.className = "zip-button";
+    zipButton.textContent = "⬇ Download all (.zip)";
+    zipButton.addEventListener("click", () => {
+        const zip = createZip(files.map((f) => ({ name: f.name, data: f.data })));
+        const url = URL.createObjectURL(zip);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "files.zip";
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    content.append(header, list, zipButton);
     div.append(senderSpan, content);
     elements.messages.appendChild(div);
     scrollToBottom();
@@ -357,8 +396,11 @@ function handleData(raw: unknown): void {
         case "text":
             addMessage("Peer", msg.text);
             break;
-        case "file":
-            addFileMessage("Peer", msg.name, msg.mime, new Blob([msg.data], { type: msg.mime }));
+        case "files":
+            addFilesMessage(
+                "Peer",
+                msg.files.map((f) => ({ name: f.name, mime: f.mime, data: new Uint8Array(f.data) })),
+            );
             break;
         case "crypto-offer":
             void handleCryptoOffer(msg);
@@ -424,9 +466,12 @@ async function handleEncMessage(msg: Extract<WireMessage, { type: "enc-message" 
     }
     if (inner.kind === "text") {
         addMessage("Peer", inner.text, true);
-    } else if (inner.kind === "file") {
-        const bytes = fromBase64(inner.data);
-        addFileMessage("Peer", inner.name, inner.mime, new Blob([bytes], { type: inner.mime }), true);
+    } else if (inner.kind === "files") {
+        addFilesMessage(
+            "Peer",
+            inner.files.map((f) => ({ name: f.name, mime: f.mime, data: fromBase64(f.data) })),
+            true,
+        );
     }
 }
 
@@ -491,31 +536,34 @@ async function sendFiles(): Promise<void> {
     const files = pendingFiles;
     pendingFiles = [];
     cancelFiles();
+
+    // Read all files first, then deliver them as a single message so the peer
+    // sees one message containing every file.
+    const payload: { name: string; mime: string; data: Uint8Array<ArrayBuffer> }[] = [];
     for (const file of files) {
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        if (encKey) {
-            await sendEncryptedInner({
-                kind: "file",
-                name: file.name,
-                mime: file.type || "application/octet-stream",
-                data: toBase64(bytes),
-            });
-        } else {
-            sendToPeer({
-                type: "file",
-                name: file.name,
-                mime: file.type || "application/octet-stream",
-                data: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
-            });
-        }
-        addFileMessage(
-            "You",
-            file.name,
-            file.type || "application/octet-stream",
-            new Blob([bytes], { type: file.type || "application/octet-stream" }),
-            encKey !== null,
-        );
+        payload.push({
+            name: file.name,
+            mime: file.type || "application/octet-stream",
+            data: new Uint8Array(await file.arrayBuffer()),
+        });
     }
+
+    if (encKey) {
+        await sendEncryptedInner({
+            kind: "files",
+            files: payload.map((f) => ({ name: f.name, mime: f.mime, data: toBase64(f.data) })),
+        });
+    } else {
+        sendToPeer({
+            type: "files",
+            files: payload.map((f) => ({
+                name: f.name,
+                mime: f.mime,
+                data: f.data.slice().buffer as ArrayBuffer,
+            })),
+        });
+    }
+    addFilesMessage("You", payload, encKey !== null);
 }
 
 // ---------------------------------------------------------------------------
