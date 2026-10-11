@@ -256,7 +256,7 @@ export function scrollToBottom(): void {
 // Send progress (replaces the text input while a chunked send is in flight)
 // ---------------------------------------------------------------------------
 
-export function showSendProgress(totalChunks: number): void {
+export function showSendProgress(totalChunks: number, label = "Sending files…"): void {
     elements.textComposer.classList.add("hidden");
     elements.fileComposer.classList.add("hidden");
     elements.sendProgressComposer.classList.remove("hidden");
@@ -264,6 +264,8 @@ export function showSendProgress(totalChunks: number): void {
     elements.sendButton.disabled = true;
     elements.fileSendButton.disabled = true;
     updateSendProgress(0, totalChunks);
+    // Set after updateSendProgress, which resets the label.
+    elements.sendProgressLabel.textContent = label;
 }
 
 export function updateSendProgress(sent: number, total: number): void {

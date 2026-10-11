@@ -7,7 +7,7 @@ import "./style.css";
 import { toBase64 } from "./crypto";
 import { clearConnectHash, readConnectHash } from "./ids";
 import type { ReceivedFile } from "./protocol";
-import { chunkBytes, validateWireMessage } from "./protocol";
+import { CHUNK_SIZE, chunkBytes, validateWireMessage } from "./protocol";
 import { handleFilesBegin, handleFilesChunk, handleFilesEnd, resetFileReceiving } from "./receive";
 import { state } from "./state";
 import {
@@ -169,28 +169,36 @@ async function sendFiles(): Promise<void> {
     state.pendingFiles = [];
     cancelFiles();
 
-    // Read all files first, then deliver them so the peer sees one message
-    // containing every file.
-    const payload: ReceivedFile[] = [];
-    for (const file of files) {
-        payload.push({
-            name: file.name,
-            mime: file.type || "application/octet-stream",
-            data: new Uint8Array(await file.arrayBuffer()),
-        });
-    }
-
     const transferId = state.nextTransferId++;
     const encrypted = state.encKey !== null;
     // A transfer spanning more than one chunk gets a progress bar in place of
-    // the text input, with sending disabled until it completes.
-    const totalChunks = payload.reduce((sum, file) => sum + chunkBytes(file.data).length, 0);
+    // the text input, with sending disabled until it completes. Chunk counts
+    // depend only on file sizes, so show the progress bar right away instead
+    // of waiting for the (potentially slow) reads into memory.
+    const totalChunks = files.reduce(
+        (sum, file) => sum + Math.max(1, Math.ceil(file.size / CHUNK_SIZE)),
+        0,
+    );
     const chunked = totalChunks > 1;
     const onProgress = chunked
         ? (sent: number, total: number) => updateSendProgress(sent, total)
         : null;
-    if (chunked) showSendProgress(totalChunks);
+    if (chunked) showSendProgress(totalChunks, "Preparing files…");
+    let payload: ReceivedFile[];
     try {
+        // Read all files first, then deliver them so the peer sees one message
+        // containing every file.
+        payload = [];
+        for (const file of files) {
+            payload.push({
+                name: file.name,
+                mime: file.type || "application/octet-stream",
+                data: new Uint8Array(await file.arrayBuffer()),
+            });
+        }
+
+        // Reading is done: switch the label to the actual sending phase.
+        if (chunked) updateSendProgress(0, totalChunks);
         if (encrypted) {
             await sendEncryptedFiles(
                 transferId,
