@@ -5,7 +5,7 @@
 
 import Peer from "peerjs";
 import type { DataConnection } from "peerjs";
-import { ID_PREFIX, generateId } from "./ids";
+import { ID_PREFIX, generateId, shortPeerId } from "./ids";
 import { clearConnection, resetEncryptionState, state } from "./state";
 import {
     addSystem,
@@ -67,7 +67,7 @@ export function setupConnection(c: DataConnection): void {
 
     c.on("open", () => {
         state.connectedPeerId = c.peer;
-        addSystem(`Connected to ${c.peer}`);
+        addSystem(`Connected to ${shortPeerId(c.peer)}`);
         updateComposer();
         state.connectDialogDismissable = true;
         closeConnectDialog();
