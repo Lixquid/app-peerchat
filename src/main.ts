@@ -284,6 +284,32 @@ elements.textInput.addEventListener("keydown", (event) => {
     }
 });
 
+// Typing anywhere on the page (while no dialog or other field owns the keys)
+// focuses the text input and inserts the pressed key, as if it had been
+// focused all along.
+window.addEventListener("keydown", (event) => {
+    // Leave modifier shortcuts (Ctrl+C, Cmd+R, Alt+Tab, ...) alone and only
+    // capture printable characters.
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    // Only printable characters, but never space: it is too commonly used for
+    // scrolling/clicking to justify stealing focus.
+    if (event.key.length !== 1 || event.key === " ") return;
+    // Don't steal keys from open dialogs or other form fields.
+    if (document.querySelector("dialog[open]")) return;
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable]")) {
+        return;
+    }
+    if (elements.textInput.disabled) return;
+    if (document.activeElement === elements.textInput) return;
+    event.preventDefault();
+    elements.textInput.focus();
+    // Insert at the caret position (an unfocused input keeps its selection).
+    const start = elements.textInput.selectionStart ?? elements.textInput.value.length;
+    const end = elements.textInput.selectionEnd ?? start;
+    elements.textInput.setRangeText(event.key, start, end, "end");
+});
+
 elements.fileButton.addEventListener("click", () => elements.fileInput.click());
 elements.fileMoreButton.addEventListener("click", () => elements.fileInput.click());
 elements.fileInput.addEventListener("change", () => {
