@@ -19,6 +19,8 @@ html,
 body {
     margin: 0;
     height: 100%;
+    /* Prevent iOS from zooming/scrolling the page when the keyboard opens. */
+    overscroll-behavior: none;
     background: var(--bg);
     color: var(--text);
 }
@@ -27,6 +29,10 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    /* Use the dynamic viewport height so the composer is never hidden behind
+       mobile browser toolbars or the on-screen keyboard. 100dvh tracks the
+       visible viewport as browser UI collapses/expands. */
+    height: 100dvh;
 }
 
 /* Header ---------------------------------------------------------------- */
@@ -249,6 +255,9 @@ h1 {
     background: var(--surface);
     border-top: 1px solid var(--border);
     padding: 0.6rem 1rem;
+    /* Keep the composer clear of the iOS home indicator / notches when the
+       layout extends to the screen edge (viewport-fit=cover). */
+    padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
     gap: 0.5rem;

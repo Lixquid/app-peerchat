@@ -368,6 +368,27 @@ elements.copyId.addEventListener("click", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Mobile viewport fallback
+// ---------------------------------------------------------------------------
+
+// Browsers that predate 100dvh report a 100vh layout viewport that is taller
+// than the visible area, leaving the composer underneath the browser's URL
+// bar. For those, pin #app to the actual visible viewport reported by
+// visualViewport, which updates as browser UI and the keyboard appear/disappear.
+const visualViewport_ = window.visualViewport;
+if (visualViewport_) {
+    const app = document.getElementById("app");
+    if (app) {
+        const setAppHeight = (): void => {
+            app.style.height = `${visualViewport_.height}px`;
+        };
+        visualViewport_.addEventListener("resize", setAppHeight);
+        visualViewport_.addEventListener("scroll", setAppHeight);
+        setAppHeight();
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
 

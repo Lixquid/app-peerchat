@@ -2,7 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      interactive-widget=resizes-content: make the on-screen keyboard shrink the
+      layout viewport instead of overlaying it (Chrome/Android).
+      viewport-fit=cover: enable safe-area insets for notched/home-indicator
+      devices so the composer can pad itself out of the way.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <title>Peerchat</title>
   </head>
   <body>
