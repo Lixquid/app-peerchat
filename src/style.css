@@ -112,7 +112,8 @@ h1 {
     color: #ffffff;
 }
 
-.message.you .content.files .save-button {
+.message.you .content.files .save-button,
+.message.you .content.files .view-button {
     color: #e3ecff;
     border-color: rgba(255, 255, 255, 0.35);
 }
@@ -194,6 +195,33 @@ h1 {
 
 .file-entries li .file-name {
     word-break: break-all;
+}
+
+.message .content.files a.view-button {
+    margin-left: auto;
+    white-space: nowrap;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.85rem;
+    /* Anchor reset: render the view link exactly like the Save button, which
+     * inherits the global `button` styling. Specificity (0,4,1) beats the
+     * generic `.message .content.files a` accent color above. */
+    text-decoration: none;
+    display: inline-block;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    cursor: pointer;
+}
+
+.message .content.files a.view-button:hover {
+    border-color: var(--accent);
+}
+
+/* When both view and save buttons are present, only the first one gets the
+ * auto left margin so they sit together on the right. */
+.file-entries li a.view-button + .save-button {
+    margin-left: 0;
 }
 
 .file-entries li .save-button {
@@ -495,6 +523,26 @@ dialog input {
 dialog input:focus {
     outline: none;
     border-color: var(--accent);
+}
+
+/* Image preview popup ---------------------------------------------------- */
+
+dialog.image-dialog {
+    width: min(48rem, 92vw);
+    padding: 1rem;
+}
+
+dialog.image-dialog .image-title {
+    word-break: break-all;
+    margin-bottom: 0.75rem;
+}
+
+dialog.image-dialog .image-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 75vh;
+    margin: 0 auto;
+    border-radius: 8px;
 }
 
 #peer-id-input {

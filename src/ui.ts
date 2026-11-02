@@ -172,6 +172,95 @@ export function addFilesMessage(sender: string, files: ReceivedFile[], encrypted
     scrollToBottom();
 }
 
+// ---------------------------------------------------------------------------
+// Image viewing (popup dialog and middle-click new tab)
+// ---------------------------------------------------------------------------
+
+/** Files with a MIME type the <img> element can display get a view button. */
+function isViewableImage(mime: string): boolean {
+    return mime.startsWith("image/");
+}
+
+/** Create a temporary blob URL for a file, revoking it after use. */
+function createTransientFileUrl(file: ReceivedFile): string {
+    const url = URL.createObjectURL(new Blob([file.data], { type: file.mime }));
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    return url;
+}
+
+let imageDialog: HTMLDialogElement | null = null;
+
+/** Open the image preview popup, reusing the existing dialog if present. */
+function openImagePopup(file: ReceivedFile): void {
+    imageDialog?.close();
+    if (!imageDialog) {
+        imageDialog = document.createElement("dialog");
+        imageDialog.className = "image-dialog";
+        // Close when clicking the backdrop.
+        imageDialog.addEventListener("click", (event) => {
+            const dialog = imageDialog;
+            if (dialog && event.target === dialog) dialog.close();
+        });
+        imageDialog.addEventListener("close", () => {
+            imageDialog?.remove();
+        });
+        imageDialog.addEventListener("cancel", () => {
+            imageDialog?.close();
+        });
+    }
+    imageDialog.replaceChildren();
+
+    const title = document.createElement("h2");
+    title.className = "image-title";
+    title.textContent = file.name;
+
+    const img = document.createElement("img");
+    img.className = "image-preview";
+    img.alt = file.name;
+    img.src = createTransientFileUrl(file);
+
+    imageDialog.append(title, img);
+    document.body.appendChild(imageDialog);
+    imageDialog.showModal();
+}
+
+/** Add the eye-icon view control for an image file entry. Rendered as an
+ * anchor with a blob href so the browser context menu offers "Open link in
+ * new tab" (and middle-click opens a tab natively); plain left clicks are
+ * intercepted to show the preview popup instead. */
+function addViewButton(li: HTMLElement, file: ReceivedFile): void {
+    const view = document.createElement("a");
+    view.className = "view-button";
+    view.title = "View image (middle-click to open in a new tab)";
+    view.setAttribute("aria-label", `View ${file.name}`);
+    view.textContent = "👁 View";
+    view.target = "_blank";
+    view.rel = "noopener noreferrer";
+    // A fresh blob URL is minted on every interaction: URLs are revoked 10
+    // seconds after creation, so reusing a stale href would navigate to a
+    // dead blob: address (which shows up as an unresolvable origin/UUID URL).
+    // Minting lazily, just before the browser needs the URL for navigation or
+    // the context menu, also keeps idle image data out of long-lived object
+    // URLs.
+    const ensureHref = () => {
+        view.href = createTransientFileUrl(file);
+    };
+    // Middle-click opens the tab via the anchor's default action on
+    // mousedown; the context menu reads the href when it opens.
+    view.addEventListener("mousedown", ensureHref);
+    view.addEventListener("contextmenu", ensureHref);
+    // Regular left click (no modifiers) shows the popup instead of navigating;
+    // ctrl/cmd/shift/alt-click keep the browser's native link behavior.
+    view.addEventListener("click", (event) => {
+        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+            return;
+        }
+        event.preventDefault();
+        openImagePopup(file);
+    });
+    li.appendChild(view);
+}
+
 /** Build the regular file download message (file list, save buttons, zip). */
 export function buildFilesMessage(
     sender: string,
@@ -221,7 +310,9 @@ export function buildFilesMessage(
             a.click();
             window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
         });
-        li.append(name, fileSize, save);
+        li.append(name, fileSize);
+        if (isViewableImage(file.mime)) addViewButton(li, file);
+        li.append(save);
         list.appendChild(li);
     }
 
