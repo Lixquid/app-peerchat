@@ -311,6 +311,15 @@ window.addEventListener("drop", (event) => {
     prepareFiles(Array.from(event.dataTransfer?.files ?? []));
 });
 
+// Paste images/files anywhere in the window to prepare them for sending.
+// Plain-text pastes are left alone so the text input keeps working normally.
+window.addEventListener("paste", (event) => {
+    const files = Array.from(event.clipboardData?.files ?? []);
+    if (files.length === 0) return;
+    event.preventDefault();
+    prepareFiles(files);
+});
+
 elements.lockButton.addEventListener("click", () => {
     if (state.encKey) return;
     elements.passwordInput.value = "";
